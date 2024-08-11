@@ -1,0 +1,97 @@
+{
+	"name": "nadesiko3-language-extension",
+    "displayName": "nadesiko3 lsp support",
+    "description": "Adds lsp support for nadesiko3",
+	"author": "weyk",
+	"license": "MIT",
+	"version": "0.0.1",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/weyk/nadesiko3-launguage-extension"
+	},
+	"publisher": "weykan",
+	"categories": [
+		"Programming Languages"
+	],
+	"keywords": [
+		"nadesiko3"
+	],
+	"engines": {
+		"vscode": "^1.92.0"
+	},
+	"activationEvents": [
+		"onLanguage:nadesiko3"
+	],
+	"main": "./client/out/extension",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "Nadesiko3 LSP configuration",
+			"properties": {
+				"Nadesiko3Lsp.maxNumberOfProblems": {
+					"scope": "resource",
+					"type": "number",
+					"default": 100,
+					"description": "Controls the maximum number of problems produced by the server."
+				},
+				"Nadesiko3Lsp.runtimeMode": {
+					"type": "string",
+					"default": "wnako",
+					"enum": [
+						"snako",
+						"cnako",
+						"wnako"					],
+					"enumDescriptions": [
+						"Use snako runtime",
+						"Use cnako runtime",
+						"Use wnako runtime"
+					]
+				},
+				"Nadesiko3Lsp.trace.server": {
+					"scope": "window",
+					"type": "string",
+					"enum": [
+						"off",
+						"messages",
+						"verbose"
+					],
+					"default": "off",
+					"description": "Traces the communication between VS Code and the language server."
+				}
+			}
+		},
+		"languages": [
+			{
+				"id": "nadesiko3",
+				"aliases": [
+					"Nadesiko3",
+					"nadesiko3",
+					"nako3"
+				],
+				"extensions": [
+					".nako3"
+				]
+			}
+		]
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -b && rollup -c rollup.config.mjs",
+		"watch:tsc": "tsc -b -w",
+		"watch:rollup": "rollup -c rollup.config.mjs -w",
+		"lint": "eslint ./client/src ./server/src --ext .ts,.mts,.cts",
+		"postinstall": "cd client && npm install && cd ../server && npm install && cd .."
+	},
+	"devDependencies": {
+		"@stylistic/eslint-plugin-ts": "^2.6.1",
+		"@types/mocha": "^10.0.7",
+		"@types/node": "^18.14.6",
+		"@types/vscode": "^1.92.0",
+		"@typescript-eslint/parser": "^7.1.0",
+		"eslint": "^8.57.0",
+		"eslint-plugin-mocha": "^10.5.0",
+		"mocha": "^10.7.3",
+		"rollup": "^4.20.0",
+		"typescript": "^5.3.3"
+	}
+}

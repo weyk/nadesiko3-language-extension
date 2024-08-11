@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"target": "es2020",
+		"lib": ["es2020"],
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"sourceMap": true,
+		"strict": true,
+		"outDir": "out",
+		"rootDir": "src",
+		"resolveJsonModule": true
+	},
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.mts",
+		"src/**/*.cts"
+	],
+	"exclude": ["node_modules"]
+}
