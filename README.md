@@ -6,7 +6,7 @@ This extension provides [Nadesiko3](https://nadesi.com/) language support for [V
 
 This Language Server works for nako3 file. It has the following language features:
 - Syntax highlighting
-- Document highliting(word highlight)
+- Document highligting(word highlight)
 
 ## Install
 

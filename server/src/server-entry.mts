@@ -20,6 +20,7 @@ import {
 	SemanticTokensBuilder,
 	SemanticTokensParams,
 	SemanticTokensDeltaParams,
+	CancellationToken,
 	DocumentHighlightParams,
 	DocumentHighlight
 } from 'vscode-languageserver/node'
@@ -28,7 +29,7 @@ import {
 	TextDocument
 } from 'vscode-languageserver-textdocument'
 
-import { legend, setupUpdateNako3doc, getSemanticTokens, getHighlight } from './nako3interface.mjs'
+import { legend, Nako3Documents } from './nako3interface.mjs'
 
 // Create a connection for the server, using Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -36,6 +37,7 @@ const connection = createConnection(ProposedFeatures.all)
 
 // Create a simple text document manager.
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument)
+const nako3docs: Nako3Documents = new Nako3Documents()
 
 let hasConfigurationCapability = false
 let hasWorkspaceFolderCapability = false
@@ -64,7 +66,10 @@ connection.onInitialize((params: InitializeParams) => {
 
 	const result: InitializeResult = {
 		capabilities: {
-			textDocumentSync: TextDocumentSyncKind.Incremental,
+			textDocumentSync: {
+				openClose: true,
+				change: TextDocumentSyncKind.Incremental,
+			},
 			// Tell the client that this server supports code completion.
 			/* completionProvider: {
 				resolveProvider: true
@@ -156,7 +161,7 @@ documents.onDidClose(e => {
 	documentSettings.delete(e.document.uri)
 })
 
-
+/*
 connection.languages.diagnostics.on(async (params) => {
 	const document = documents.get(params.textDocument.uri)
 	if (document !== undefined) {
@@ -174,39 +179,10 @@ connection.languages.diagnostics.on(async (params) => {
 	}
 })
 
-
-connection.onRequest("textDocument/documentHighlight", (params: DocumentHighlightParams): DocumentHighlight[]|null => {
-	const document = documents.get(params.textDocument.uri)
-	if (document) {
-		setupUpdateNako3doc(document)
-		return getHighlight(params.position)
-	} else {
-		return null
-	}
-})
-
-connection.onRequest("textDocument/semanticTokens/full/delta", (params: SemanticTokensDeltaParams) => {
-	console.log(params)
-})
-
-connection.onRequest("textDocument/semanticTokens/full", (params: SemanticTokensParams) => {
-	// Implement your logic to provide semantic tokens for the given document here.
-	// You should return the semantic tokens as a response.
-	const document = documents.get(params.textDocument.uri)
-	if (document) {
-		setupUpdateNako3doc(document)
-		const semanticTokens = getSemanticTokens()
-		return semanticTokens
-	} else {
-		const builder = new SemanticTokensBuilder()
-		return builder.build()
-	}
-})
-
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
-	validateTextDocument(change.document)
+	// validateTextDocument(change.document)
 })
 
 async function validateTextDocument(textDocument: TextDocument): Promise<Diagnostic[]> {
@@ -253,12 +229,12 @@ async function validateTextDocument(textDocument: TextDocument): Promise<Diagnos
 	}
 	return diagnostics
 }
-
+*/
 connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode
 	connection.console.log('We received a file change event')
 })
-
+/*
 // This handler provides the initial list of the completion items.
 connection.onCompletion(
 	(_textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
@@ -294,6 +270,55 @@ connection.onCompletionResolve(
 		return item
 	}
 )
+*/
+
+documents.onDidClose(e => {
+	nako3docs.close(e.document)
+})
+
+documents.onDidOpen(e => {
+	nako3docs.open(e.document)
+})
+
+connection.onRequest("textDocument/documentHighlight", (params: DocumentHighlightParams): DocumentHighlight[]|null => {
+	const document = documents.get(params.textDocument.uri)
+	if (document) {
+		nako3docs.setFullText(document)
+		return nako3docs.getHighlight(params.textDocument, params.position)
+	} else {
+		return null
+	}
+})
+
+connection.languages.semanticTokens.on((params: SemanticTokensParams, token: CancellationToken) => {
+	const document = documents.get(params.textDocument.uri)
+	if (document) {
+		nako3docs.setFullText(document)
+		const semanticTokens = nako3docs.getSemanticTokens(params.textDocument)
+		return semanticTokens
+	} else {
+		const builder = new SemanticTokensBuilder()
+		return builder.build()
+	}
+})
+
+connection.onRequest("textDocument/semanticTokens/full/delta", (params: SemanticTokensDeltaParams) => {
+	console.log(params)
+})
+
+connection.onRequest("textDocument/semanticTokens/full", (params: SemanticTokensParams) => {
+	// Implement your logic to provide semantic tokens for the given document here.
+	// You should return the semantic tokens as a response.
+	const document = documents.get(params.textDocument.uri)
+	if (document) {
+		nako3docs.setFullText(document)
+		const semanticTokens = nako3docs.getSemanticTokens(params.textDocument)
+		return semanticTokens
+	} else {
+		const builder = new SemanticTokensBuilder()
+		return builder.build()
+	}
+})
 
 // Make the text document manager listen on the connection
 // for open, change and close text document events
